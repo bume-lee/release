@@ -1,33 +1,37 @@
 # This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
 # For more information see: https://help.github.com/actions/language-and-framework-guides/publishing-nodejs-packages
 
-name: Node.js Package
+name: Release
 
 on:
-  release:
-    types: [created]
+  push:
+    branches:
+      - master
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-      - run: npm ci
-      - run: npm test
-
-  publish-npm:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          registry-url: https://registry.npmjs.org/
-      - run: npm ci
-      - run: npm publish
+      - name: Update changelog
+        uses: release-drafter/release-drafter@v5
+        id: release-drafter
         env:
-          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get previous release version
+        run: |
+          echo "PREV_VER=$(cat pyproject.toml | grep -o -E '(version\s=\s)([[:punct:]])([0-9]+\.[0-9]+\.[0-9]+.+)([[:punct:]])' | cut -d ' ' -f 3 | tr -d '"')" >> $GITHUB_ENV
+      - name: Get previous bump version
+        env:
+          PREV_VER: ${{ env.PREV_VER }}
+        run: |
+          if [[ "$PREV_VER" != *"-pre."* ]]; then
+            echo "OLD_BUMP=0" >> $GITHUB_ENV
+          else
+            echo "OLD_BUMP=$(echo $PREV_VER | cut -d '.' -f 4)" >> $GITHUB_ENV
+          fi
+      - name: Bump version
+        env:
+          BUMP_VER: ${{ env.OLD_BUMP }}
+        run: |
+          echo "NEW_BUMP=$(($BUMP_VER + 1))" >> $GITHUB_ENV
