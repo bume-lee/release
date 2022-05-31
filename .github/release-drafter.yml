@@ -3,6 +3,7 @@ tag-template: "v$RESOLVED_VERSION"
 categories:
   - title: "🚀 추가사항"
     labels:
+      - "enhancement"
       - "feature"
   - title: "개선 및 변경사항"
     labels:
@@ -14,6 +15,10 @@ categories:
   - title: "🧰 문서/기타 설정"
     labels:
       - "etc"
+      - "chore"
+      - "documentation"
+      - "dependencies"
+
 change-template: "- $TITLE @$AUTHOR (#$NUMBER)"
 change-title-escapes: '\<*_&'
 version-resolver:
@@ -27,8 +32,10 @@ version-resolver:
     labels:
       - "patch"
   default: patch
+
 exclude-labels:
   - "nochangelog"
+  - "skip-changelog"
 
 template: |
   ## 릴리즈 노트
